@@ -1,0 +1,171 @@
+Exercise 1: Counts of Texting While Driving Categories
+To determine how frequently students reported texting while driving during the past 30 days, a frequency table was created using the variable text_while_driving_30d.
+yrbss %>%
+  count(text_while_driving_30d)
+Interpretation
+The resulting table displays the number of students falling into each texting category, ranging from no texting while driving to texting while driving every day during the previous 30 days. These counts provide a descriptive summary of student driving behavior.
+
+
+Exercise 2: Proportion of Non-Helmet Wearers Who Text While Driving Every Day
+Students who reported never wearing a helmet were isolated into a new dataset.
+
+no_helmet <- yrbss %>%
+  filter(helmet_12m == "never")
+
+no_helmet <- no_helmet %>%
+  mutate(text_ind =
+           ifelse(text_while_driving_30d == "30",
+                  "yes", "no"))
+
+no_helmet %>%
+  count(text_ind) %>%
+  mutate(prop = n / sum(n))
+
+Interpretation
+The calculated proportion represents the percentage of students who never wear a helmet and reported texting while driving every day during the previous 30 days. This value serves as a sample estimate of the corresponding population proportion.
+
+
+Exercise 3: Margin of Error for the Confidence Interval
+The bootstrap confidence interval provided was:
+Result
+Margin of Error = 0.00625 (0.63%)
+Interpretation
+We are 95% confident that the true proportion of non-helmet-wearing students who text while driving every day is within ±0.63 percentage points of our sample estimate.
+
+
+Exercise 4: Confidence Intervals for Additional Categorical Variables
+Two additional categorical variables were selected for analysis.
+
+Example 1: Current Smoking Status
+yrbss %>%
+  mutate(smoke_ind =
+           ifelse(currently_smoke == "yes",
+                  "yes","no")) %>%
+  specify(response = smoke_ind,
+          success = "yes") %>%
+  generate(reps = 1000,
+           type = "bootstrap") %>%
+  calculate(stat = "prop") %>%
+  get_ci(level = 0.95)
+
+Interpretation
+The resulting interval estimates the proportion of all high school students who currently smoke. We are 95% confident that the true population proportion lies between the lower and upper confidence interval endpoints.
+
+Example 2: Always Wearing a Seatbelt
+
+yrbss %>%
+  mutate(seatbelt_ind =
+           ifelse(seatbelt == "always",
+                  "yes","no")) %>%
+  specify(response = seatbelt_ind,
+          success = "yes") %>%
+  generate(reps = 1000,
+           type = "bootstrap") %>%
+  calculate(stat = "prop") %>%
+  get_ci(level = 0.95)
+
+Interpretation
+The resulting interval estimates the percentage of students who always wear a seatbelt. We are 95% confident that the true population proportion falls within the calculated interval.
+For both confidence intervals, the margin of error can be calculated using:
+(upper_ci - lower_ci) / 2
+
+Exercise 5: Relationship Between Population Proportion and Margin of Error
+The following code was used:
+n <- 1000
+
+p <- seq(from = 0, to = 1, by = 0.01)
+
+me <- 2 * sqrt(p * (1 - p) / n)
+
+dd <- data.frame(p = p, me = me)
+
+ggplot(dd, aes(x = p, y = me)) +
+  geom_line() +
+  labs(
+    x = "Population Proportion",
+    y = "Margin of Error"
+  )
+
+The graph demonstrates that the margin of error is smallest when the population proportion is close to 0 or 1 and largest when the proportion is near 0.5.
+The relationship is symmetric around 0.5 because the quantity  is maximized at .
+
+Exercise 6: Sampling Distribution When n = 300 and p = 0.1
+
+Exercise 7: Effect of Changing p While Holding n Constant
+Center
+The center of the sampling distribution remains equal to the chosen population proportion .
+Spread
+The spread increases as  approaches 0.5 and decreases as  approaches 0 or 1.
+Shape
+When  is close to 0.5, the sampling distribution becomes more symmetric and bell-shaped. When  is close to 0 or 1, the distribution becomes increasingly skewed.
+Conclusion
+The value of  determines the center of the sampling distribution and strongly influences both its spread and shape.
+
+Exercise 8: Effect of Changing n
+Interpretation
+As sample size increases:
+The standard error decreases.
+The sampling distribution becomes narrower.
+Sample proportions cluster more tightly around the true population proportion.
+The distribution becomes more approximately normal.
+Conclusion
+Larger sample sizes produce more precise estimates of population proportions.
+
+Exercise 9
+Is there convincing evidence that those who sleep 10+ hours are more likely to strength train every day?
+yrbss_sleep <- yrbss %>%
+  mutate(
+    sleep10 =
+      ifelse(school_night_hours_sleep == "10+",
+             "10+","Less"),
+    strength_daily =
+      ifelse(strength_training_7d == "7",
+             "Yes","No")
+  )
+
+obs_diff <- yrbss_sleep %>%
+  specify(strength_daily ~ sleep10,
+           success = "Yes") %>%
+  calculate(stat = "diff in props",
+            order = c("10+","Less"))
+
+null_dist <- yrbss_sleep %>%
+  specify(strength_daily ~ sleep10,
+           success = "Yes") %>%
+  hypothesize(null = "independence") %>%
+  generate(reps = 1000,
+           type = "permute") %>%
+  calculate(stat = "diff in props",
+            order = c("10+","Less"))
+
+get_p_value(
+  null_dist,
+  obs_stat = obs_diff,
+  direction = "right"
+)
+Conclusion
+Use the p-value:
+If p-value < 0.05 → reject 
+If p-value ≥ 0.05 → fail to reject 
+Confidence Interval
+yrbss_sleep %>%
+  specify(strength_daily ~ sleep10,
+          success = "Yes") %>%
+  generate(reps = 1000,
+          type = "bootstrap") %>%
+  calculate(stat = "diff in props",
+            order = c("10+","Less")) %>%
+  get_ci()
+
+
+Exercise 10
+If no difference exists, what is the probability of detecting a difference simply by chance?
+Answer
+The probability is 0.05, or 5%. A Type I error occurs when the null hypothesis is actually true but is incorrectly rejected.
+
+Exercise 11
+Sample size needed for a 1% margin of error
+
+Answer
+To guarantee a margin of error no greater than 1% at the 95% confidence level, the largest possible variance is assumed by setting p = 0.5. Using the sample size formula results in a required sample size of approximately 9,604 respondents. Therefore, at least 9,604 people should be sampled.
+
