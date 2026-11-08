@@ -1,0 +1,121 @@
+What are the cases in this data set? How many cases are there in our sample?
+The cases in this dataset are individual high school students who participated in the YRBSS survey. Each row represents one student and contains information about demographic characteristics, health behaviors, weight, height, physical activity, sleep, and other variables.
+There are 13,583 cases in the sample.
+
+Using visualization and summary statistics, describe the distribution of weights.
+The distribution of weight is unimodal and slightly right skewed. The mean weight (67.91 kg) is greater than the median weight (64.41 kg), suggesting a right tail with some heavier individuals pulling the mean upward.
+Summary statistics:
+Minimum: 29.94 kg
+Q1: 56.25 kg
+Median: 64.41 kg
+Mean: 67.91 kg
+Q3: 76.20 kg
+Maximum: 180.99 kg
+The large range and maximum value suggest the presence of some unusually high weights.
+
+How many observations are we missing weights from?
+NA's = 1004
+
+Make a side-by-side boxplot of physical_3plus and weight. Is there a relationship? What did you expect and why?
+ggplot(yrbss, aes(x = physical_3plus, y = weight)) +
+  geom_boxplot()
+
+Answer
+The boxplots suggest a small difference in weight between students who are physically active at least three days per week and those who are not. Students in the "yes" group appear to have a slightly higher median weight.
+This result may be surprising because many people expect more active students to weigh less. However, physically active students may have greater muscle mass, which contributes to a higher body weight even if they are healthier overall.
+
+
+Are all conditions necessary for inference satisfied?
+Independence
+The observations come from a random sample of students, so independence is reasonable.
+Sample Size
+Both groups contain many observations, well above 30 observations each.
+You can verify with:
+yrbss %>%
+  group_by(physical_3plus) %>%
+  summarise(n=n())
+
+
+How many of these null permutations have a difference of at least obs_stat?
+Using the histogram and the reported p-value:
+
+p_value = 0
+
+Construct and interpret a confidence interval for the difference in mean weights.
+
+ci_weight <- yrbss %>%
+ drop_na(weight, physical_3plus) %>%
+ specify(weight ~ physical_3plus) %>%
+ generate(reps = 1000, type = "bootstrap") %>%
+ calculate(stat = "diff in means",
+          order = c("yes","no")) %>%
+ get_confidence_interval(level = .95)
+
+ci_weight
+
+nterpretation
+We are 95% confident that the true difference in average weight between students who are physically active at least three days per week and those who are not lies within the calculated interval.
+Since the interval does not contain 0, the data provide evidence that average weight differs between the two groups.
+(Insert your actual interval from R output.)
+
+Calculate a 95% confidence interval for average height.
+yrbss %>%
+ drop_na(height) %>%
+ specify(response = height) %>%
+ generate(reps = 1000, type = "bootstrap") %>%
+ calculate(stat = "mean") %>%
+ get_confidence_interval(level = .95)
+nterpretation
+We are 95% confident that the true average height of high school students in the population falls within the calculated interval.
+
+
+Calculate a 90% confidence interval and compare widths.
+yrbss %>%
+ drop_na(height) %>%
+ specify(response = height) %>%
+ generate(reps = 1000, type = "bootstrap") %>%
+ calculate(stat = "mean") %>%
+ get_confidence_interval(level = .90)
+
+Answer
+The 90% confidence interval is narrower than the 95% confidence interval.
+This occurs because lower confidence requires capturing less of the sampling distribution, producing a smaller margin of error.
+
+Conduct a hypothesis test evaluating whether average height differs by activity level.
+obs_diff_height <- yrbss %>%
+ drop_na(height, physical_3plus) %>%
+ specify(height ~ physical_3plus) %>%
+ calculate(stat = "diff in means",
+          order = c("yes","no"))
+
+null_height <- yrbss %>%
+ drop_na(height, physical_3plus) %>%
+ specify(height ~ physical_3plus) %>%
+ hypothesize(null = "independence") %>%
+ generate(reps = 1000, type = "permute") %>%
+ calculate(stat = "diff in means",
+          order = c("yes","no"))
+
+null_height %>%
+ get_p_value(obs_stat = obs_diff_height,
+            direction = "two_sided")
+If the p-value is below 0.05, reject the null hypothesis and conclude there is evidence that average height differs between the activity groups.
+Otherwise, fail to reject the null hypothesis.
+
+
+Determine the number of different options for hours_tv_per_school_day.
+unique(yrbss$hours_tv_per_school_day)
+
+
+Research Question
+Do students who get at least 8 hours of sleep on school nights have a different average weight than students who sleep less than 8 hours?
+
+yrbss <- yrbss %>%
+ mutate(sleep8 =
+          ifelse(
+            school_night_hours_sleep %in%
+              c("8","9","10+"),
+            "8plus",
+            "less8"
+          ))
+
