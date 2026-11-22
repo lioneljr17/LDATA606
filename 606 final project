@@ -1,0 +1,118 @@
+---
+title: DATA 606 Data Project Proposal
+author: Lionel Desroses
+---
+
+### Data Preparation
+
+```{r setup, echo=TRUE, results='hide', warning=FALSE, message=FALSE}
+library(tidyverse)
+
+# Data will be imported after final datasets are selected.
+
+Research Question
+How do salary, unemployment rates, and state-level job demand vary across college majors?
+More specifically, which college majors provide the strongest return on investment (ROI) based on salary and employment outcomes, and which states offer the greatest opportunities for careers associated with those majors?
+The goal is to identify combinations of degree fields and states that provide favorable career prospects for graduates seeking strong employment opportunities and earning potential.
+Cases
+The cases will consist of college majors and their associated career outcomes.
+Depending on the final datasets selected, there may be approximately 100 to 200 college majors and employment statistics across all 50 U.S. states.
+Each observation will contain information about a major, salary levels, unemployment rates, and employment demand related to occupations associated with that major.
+Data Collection
+The data were collected through government surveys and labor market reporting programs.
+Salary and unemployment information are expected to come from publicly available labor and educational datasets. State employment demand information will be obtained from labor market databases that track occupational employment and workforce demand across the United States.
+No data will be collected directly from individuals for this project.
+Type of Study
+
+This is an observational study.
+The project analyzes existing employment and education data without manipulating any variables or assigning treatments.
+As a result, the analysis can identify associations between degree choice, salary, unemployment, and job demand, but it cannot establish cause-and-effect relationships.
+
+
+Data Source
+The planned data sources include:
+FiveThirtyEight College Majors Dataset
+U.S. Bureau of Labor Statistics (BLS)
+U.S. Census Bureau
+O*NET Career Database (if needed)
+Potential sources:
+https://github.com/fivethirtyeight/data/tree/master/college-majors
+https://www.bls.gov
+https://www.census.gov
+https://www.onetonline.org
+Describe Your Variables
+Response Variable
+Return on Investment (ROI) Score
+Type: Quantitative
+The ROI score will be calculated using variables such as median salary, employment rate, and unemployment rate to measure the overall career value associated with a college major.
+Possible formula: ROI = MedianSalary * EmploymentRate   or ROI = MedianSalary / UnemploymentRate
+
+The final formula will be determined after exploring the datasets.
+Explanatory Variables
+College Major
+Qualitative (Categorical)
+Examples:
+Computer Science
+Nursing
+Finance
+Psychology
+Education
+State
+Qualitative (Categorical)
+Examples:
+California
+Texas
+New York
+Washington
+Median Salary
+Quantitative
+Represents the typical earnings associated with a given major or occupation.
+Unemployment Rate
+Quantitative
+Represents the percentage of graduates who are unemployed.
+Employment Demand
+Quantitative
+Represents the availability of jobs within a state for occupations related to a specific degree.
+Relevant Summary Statistics
+The following statistics will be calculated:
+Mean salary by major
+Median salary by major
+Mean unemployment rate by major
+Employment demand by state
+ROI score rankings
+Planned visualizations include:
+Scatterplot of Salary vs. Unemployment Rate
+Boxplots of Salary by Major Category
+Bar charts of Top ROI Majors
+Heatmap showing Degree Demand by State
+Ranking chart of Degree-State combinations with the highest career opportunity scores
+
+# Summary statistics
+summary(project_data)
+
+# Salary versus unemployment
+ggplot(project_data,
+       aes(x = UnemploymentRate,
+           y = MedianSalary)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+# ROI rankings
+ggplot(project_data,
+       aes(x = reorder(Major, ROI),
+           y = ROI)) +
+  geom_col() +
+  coord_flip()
+
+  Expected Outcome
+I expect to find that majors in fields such as Computer Science, Engineering, Nursing, and Finance will demonstrate higher ROI scores due to a combination of strong salaries and lower unemployment rates. I also expect certain states to show a greater concentration of opportunities for specific degree fields, allowing recommendations such as identifying the states that offer the strongest employment prospects for graduates pursuing particular careers. 
+
+### One suggestion
+
+Instead of making the response variable **ROI Score**, you might make the response variable **Median Salary** and keep ROI as a derived metric. Professors often prefer using an actual variable from the dataset rather than one you create. Then your study becomes:
+
+> How do college major, unemployment rate, and state-level job demand help explain differences in salary outcomes?
+
+while still presenting ROI rankings as part of your findings.
+
+That will likely make the statistical analysis easier when you get to regression later in the semester.
