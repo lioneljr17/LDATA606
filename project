@@ -1,0 +1,268 @@
+How do earnings, unemployment rates, and state-level occupational opportunities vary across career fields associated with different college majors?
+
+Step 1: Load Packages
+library(tidyverse)
+library(readxl)
+library(janitor)
+library(scales)
+
+Step 2: Load College Major Data
+majors <- read_csv(
+  "all-ages.csv"
+)
+glimpse(majors)
+
+summary(majors)
+
+Step 3: Clean Major Dataset
+majors_clean <-
+  majors %>%
+  clean_names() %>%
+  rename(
+    median_salary = median
+  ) %>%
+  select(
+    major,
+    major_category,
+    median_salary,
+    unemployment_rate,
+    employed,
+    unemployed,
+    p25th,
+    p75th
+  )
+
+  Create Occupation Categories
+
+  majors_clean <-
+  majors_clean %>%
+  mutate(
+    occupation_category = case_when(
+
+      major_category == "Computers & Mathematics" ~
+        "Technology",
+
+      major_category == "Engineering" ~
+        "Engineering",
+
+      major_category == "Health" ~
+        "Healthcare",
+
+      major_category == "Business" ~
+        "Finance",
+
+      major_category == "Education" ~
+        "Education",
+
+      major_category == "Biology & Life Science" ~
+        "Science",
+
+      TRUE ~ "Other"
+    )
+  )
+
+
+  Step 4: Load BLS State Dataset
+
+  bls <-
+  read_excel(
+    "state_M2025_dl.xlsx"
+  )
+glimpse(bls)
+
+Step 5: Keep Detailed Occupations Only
+
+The file contains totals, major groups, and detailed occupations.
+Keep detailed occupations:
+
+bls_clean <-
+  bls %>%
+  filter(
+    O_GROUP == "detailed"
+  )
+
+
+  Step 6: Rename Columns
+
+  bls_clean <-
+  bls_clean %>%
+  rename(
+
+    state = AREA_TITLE,
+
+    occupation = OCC_TITLE,
+
+    total_employment = TOT_EMP,
+
+    jobs_per_1000 = JOBS_1000,
+
+    location_quotient = LOC_QUOTIENT,
+
+    mean_salary = A_MEAN,
+
+    median_salary = A_MEDIAN
+  )
+
+  Step 7: Create Occupation Categories
+
+  bls_clean <-
+  bls_clean %>%
+  mutate(
+    occupation_category = case_when(
+
+      str_detect(
+        occupation,
+        "Software|Computer|Data|Network|Security"
+      ) ~ "Technology",
+
+      str_detect(
+        occupation,
+        "Nurse|Physician|Medical|Healthcare"
+      ) ~ "Healthcare",
+
+      str_detect(
+        occupation,
+        "Engineer"
+      ) ~ "Engineering",
+
+      str_detect(
+        occupation,
+        "Financial|Accountant|Auditor"
+      ) ~ "Finance",
+
+      str_detect(
+        occupation,
+        "Teacher|Professor|Education"
+      ) ~ "Education",
+
+      TRUE ~ "Other"
+    )
+  )
+
+  Step 8: Summarize State Opportunities
+Instead of 37,000 rows:
+
+state_summary <-
+  bls_clean %>%
+  group_by(
+    state,
+    occupation_category
+  ) %>%
+  summarise(
+
+    avg_salary =
+      mean(
+        median_salary,
+        na.rm = TRUE
+      ),
+
+    total_jobs =
+      sum(
+        total_employment,
+        na.rm = TRUE
+      ),
+
+    avg_location_quotient =
+      mean(
+        location_quotient,
+        na.rm = TRUE
+      ),
+
+    avg_jobs_per_1000 =
+      mean(
+        jobs_per_1000,
+        na.rm = TRUE
+      ),
+
+    .groups = "drop"
+  )
+
+  Step 9: Summarize Major Outcomes
+  major_summary <-
+  majors_clean %>%
+  group_by(
+    occupation_category
+  ) %>%
+  summarise(
+
+    avg_major_salary =
+      mean(
+        median_salary,
+        na.rm = TRUE
+      ),
+
+    avg_unemployment =
+      mean(
+        unemployment_rate,
+        na.rm = TRUE
+      ),
+
+    .groups = "drop"
+  )
+
+  Step 10: Join Datasets
+  project_data <-
+  left_join(
+    state_summary,
+    major_summary,
+    by = "occupation_category"
+  )
+
+  Degree Outcomes
+        +
+State Job Market
+
+Step 11: Create Opportunity Score
+This may become your most interesting metric.
+
+project_data <-
+  project_data %>%
+  mutate(
+
+    opportunity_score =
+      scale(avg_salary) +
+      scale(avg_jobs_per_1000) +
+      scale(avg_location_quotient) -
+      scale(avg_unemployment)
+
+  )
+
+
+  High score means:
+High salary
+High job concentration
+High employment opportunities
+Low unemployment
+￼
+Example Analysis
+Top States for Technology
+
+project_data %>%
+  filter(
+    occupation_category == "Technology"
+  ) %>%
+  arrange(
+    desc(opportunity_score)
+  ) %>%
+  head(10)
+
+  Top States for Healthcare
+  project_data %>%
+  filter(
+    occupation_category == "Healthcare"
+  ) %>%
+  arrange(
+    desc(opportunity_score)
+  ) %>%
+  head(10)
+
+  model <- lm(
+  avg_salary ~
+    avg_unemployment +
+    avg_jobs_per_1000 +
+    avg_location_quotient,
+  data = project_data
+)
+
+summary(model)
+
