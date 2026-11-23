@@ -116,3 +116,88 @@ Instead of making the response variable **ROI Score**, you might make the respon
 while still presenting ROI rankings as part of your findings.
 
 That will likely make the statistical analysis easier when you get to regression later in the semester.
+
+
+
+
+Research Question
+How do salary outcomes, unemployment rates, and state-level employment opportunities vary across career fields associated with different college majors?
+More specifically, which career fields provide the strongest combination of high earnings, low unemployment, and strong employment demand across U.S. states?
+The goal of this project is to identify career fields that offer favorable employment outcomes and determine which states provide the strongest labor market opportunities for graduates pursuing those careers.
+￼
+Cases
+The cases in this study are state and career-field combinations.
+The analysis combines information on college major outcomes with state-level occupational employment data. Career fields such as Technology, Engineering, Healthcare, Finance, Education, and Science will be used to connect the two datasets.
+After aggregation and data cleaning, the final dataset is expected to contain approximately 250 to 350 observations representing career-field opportunities across all 50 states.
+Each observation includes information on salary, unemployment, employment concentration, and job availability for a particular career field within a state.
+￼
+Data Collection
+The data were collected through large-scale surveys conducted by government agencies.
+The college major dataset is derived from the American Community Survey (ACS), which collects information about education, employment, and earnings from U.S. residents.
+The occupational employment dataset is published by the Bureau of Labor Statistics (BLS) through the Occupational Employment and Wage Statistics (OEWS) program, which surveys employers across the United States regarding employment levels and wages for different occupations.
+No data were collected directly by the researcher.
+￼
+Type of Study
+This is an observational study.
+The analysis uses existing data on education, employment, wages, and occupational demand without assigning treatments or manipulating any variables.
+As a result, the study can identify associations between career fields, wages, unemployment, and employment opportunities, but it cannot establish causal relationships.
+￼
+Data Source
+College Major Outcomes
+FiveThirtyEight College Majors Dataset
+Data Source:
+https://github.com/fivethirtyeight/data/tree/master/college-majors
+File Used:
+https://r2.datahub.io/cmmn95p5y001lrlf0yq0h8qzv/main/raw/data/all-ages.csv
+Occupational Employment and Wage Statistics
+U.S. Bureau of Labor Statistics (BLS)
+Occupational Employment and Wage Statistics (OEWS)
+https://www.bls.gov/oes/
+File Used:
+state_M2025_dl.xlsx
+￼
+Describe Your Variables
+Response Variable
+Average Occupational Median Salary
+Variable: avg_salary
+Type: Quantitative
+This variable represents the average median annual wage for occupations within a career field and state.
+￼
+Explanatory Variables
+Career Field
+Variable: occupation_category
+Type: Qualitative (Categorical)
+Examples include:
+Technology
+Engineering
+Healthcare
+Finance
+Education
+Science
+￼
+Unemployment Rate
+Variable: avg_unemployment
+Type: Quantitative
+This variable represents unemployment rates associated with related college majors.
+￼
+Jobs Per 1,000 Workers
+Variable: avg_jobs_per_1000
+Type: Quantitative
+This measures the concentration of jobs within a state.
+￼
+Location Quotient
+Variable: avg_location_quotient
+Type: Quantitative
+This measures how concentrated a career field is within a state compared to the national average.
+￼
+State
+Variable: state
+Type: Qualitative (Categorical)
+Represents the U.S. state associated with the employment data.
+￼
+Planned Statistical Analysis
+The primary response variable will be:
+
+Expected Outcome
+I expect career fields such as Technology, Engineering, Healthcare, and Finance to demonstrate higher salaries and lower unemployment rates than many other fields. I also expect certain states to exhibit stronger employment opportunities for specific career fields based on employment concentration and labor demand.
+
