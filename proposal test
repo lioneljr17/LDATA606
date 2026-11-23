@@ -1,0 +1,218 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r data-cleaning, message=FALSE, warning=FALSE}
+
+library(tidyverse)
+library(readxl)
+library(readr)
+library(janitor)
+
+#--------------------------------------------------
+# Load data
+#--------------------------------------------------
+
+majors <- read_csv(
+  "https://r2.datahub.io/cmmn95p5y001lrlf0yq0h8qzv/main/raw/data/all-ages.csv"
+)
+
+bls <- read_excel("/Users/lioneljrdesroses/Downloads/oesm25st/oesm25st/state_M2025_dl.xlsx")
+
+#--------------------------------------------------
+# Clean college major data
+#--------------------------------------------------
+
+majors_clean <- majors %>%
+  clean_names() %>%
+  rename(
+    median_salary = median
+  ) %>%
+  select(
+    major,
+    major_category,
+    median_salary,
+    unemployment_rate,
+    employed,
+    unemployed,
+    p25th,
+    p75th
+  ) %>%
+  mutate(
+    occupation_category = case_when(
+      major_category == "Computers & Mathematics" ~ "Technology",
+      major_category == "Engineering" ~ "Engineering",
+      major_category == "Health" ~ "Healthcare",
+      major_category == "Business" ~ "Finance",
+      major_category == "Education" ~ "Education",
+      major_category == "Biology & Life Science" ~ "Science",
+      TRUE ~ "Other"
+    )
+  )
+
+#--------------------------------------------------
+# Clean BLS state occupation data
+#--------------------------------------------------
+
+bls_clean <- bls %>%
+  filter(O_GROUP == "detailed") %>%
+  rename(
+    state = AREA_TITLE,
+    occupation = OCC_TITLE,
+    total_employment = TOT_EMP,
+    jobs_per_1000 = JOBS_1000,
+    location_quotient = LOC_QUOTIENT,
+    mean_salary = A_MEAN,
+    median_salary = A_MEDIAN
+  ) %>%
+  mutate(
+
+    total_employment =
+      parse_number(as.character(total_employment)),
+
+    jobs_per_1000 =
+      parse_number(as.character(jobs_per_1000)),
+
+    location_quotient =
+      parse_number(as.character(location_quotient)),
+
+    mean_salary =
+      parse_number(as.character(mean_salary)),
+
+    median_salary =
+      parse_number(as.character(median_salary))
+
+  ) %>%
+  mutate(
+    occupation_category = case_when(
+
+      str_detect(
+        occupation,
+        regex(
+          "Software|Computer|Data|Network|Security",
+          ignore_case = TRUE
+        )
+      ) ~ "Technology",
+
+      str_detect(
+        occupation,
+        regex(
+          "Nurse|Physician|Medical|Healthcare",
+          ignore_case = TRUE
+        )
+      ) ~ "Healthcare",
+
+      str_detect(
+        occupation,
+        regex(
+          "Engineer",
+          ignore_case = TRUE
+        )
+      ) ~ "Engineering",
+
+      str_detect(
+        occupation,
+        regex(
+          "Financial|Accountant|Auditor",
+          ignore_case = TRUE
+        )
+      ) ~ "Finance",
+
+      str_detect(
+        occupation,
+        regex(
+          "Teacher|Professor|Education",
+          ignore_case = TRUE
+        )
+      ) ~ "Education",
+
+      TRUE ~ "Other"
+    )
+  )
+
+#--------------------------------------------------
+# Verify numeric conversion
+#--------------------------------------------------
+
+glimpse(
+  bls_clean %>%
+    select(
+      total_employment,
+      jobs_per_1000,
+      location_quotient,
+      median_salary
+    )
+)
+
+#--------------------------------------------------
+# Aggregate BLS data
+#--------------------------------------------------
+
+state_summary <- bls_clean %>%
+  group_by(
+    state,
+    occupation_category
+  ) %>%
+  summarise(
+    avg_salary =
+      mean(median_salary, na.rm = TRUE),
+
+    avg_total_employment =
+      mean(total_employment, na.rm = TRUE),
+
+    avg_location_quotient =
+      mean(location_quotient, na.rm = TRUE),
+
+    avg_jobs_per_1000 =
+      mean(jobs_per_1000, na.rm = TRUE),
+
+    .groups = "drop"
+  )
+
+#--------------------------------------------------
+# Aggregate major outcomes
+#--------------------------------------------------
+
+major_summary <- majors_clean %>%
+  group_by(
+    occupation_category
+  ) %>%
+  summarise(
+    avg_major_salary =
+      mean(median_salary, na.rm = TRUE),
+
+    avg_unemployment =
+      mean(unemployment_rate, na.rm = TRUE),
+
+    .groups = "drop"
+  )
+
+#--------------------------------------------------
+# Join datasets
+#--------------------------------------------------
+
+project_data <- state_summary %>%
+  left_join(
+    major_summary,
+    by = "occupation_category"
+  )
+
+#--------------------------------------------------
+# Opportunity score
+#--------------------------------------------------
+
+project_data <- project_data %>%
+  mutate(
+    opportunity_score =
+      as.numeric(scale(avg_salary)) +
+      as.numeric(scale(avg_jobs_per_1000)) +
+      as.numeric(scale(avg_location_quotient)) -
+      as.numeric(scale(avg_unemployment))
+  )
+
+# Quick look at final dataset
+
+head(project_data)
+
+```
